@@ -9,6 +9,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'ActivityScheduler::index');
 $routes->get('scheduler', 'ActivityScheduler::index');
 $routes->get('bmkg_api', 'ActivityScheduler::bmkg_api');
+$routes->get('dbtest', 'DBTest::index');
 
 // API Routes for Activity Scheduler
 $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {

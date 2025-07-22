@@ -1,68 +1,234 @@
-# CodeIgniter 4 Application Starter
+# Outdoor Activity Scheduler
 
-## What is CodeIgniter?
+A web application that helps users schedule outdoor activities by analyzing weather forecasts from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika) API to suggest optimal time slots with favorable weather conditions.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Features
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+### Frontend
+- 📱 Responsive web interface
+- 🌤️ Interactive weather forecast display
+- ⏰ Time slot selection with weather conditions
+- 📊 Real-time weather data visualization
+- ✨ Modern UI with smooth animations
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+### Backend
+- 🚀 Built with CodeIgniter 4 framework
+- 🌐 RESTful API endpoints
+- 🏛️ Integration with BMKG Weather Forecast API
+- 💾 Local database storage for activities
+- 🔍 Smart weather filtering for outdoor activities
+- 📈 Activity statistics and reporting
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## Technology Stack
 
-## Installation & updates
+- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Backend**: PHP 8.1+, CodeIgniter 4
+- **Database**: MySQL 8.0+
+- **API**: BMKG Weather Forecast API
+- **Styling**: Custom CSS with modern design principles
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+## Prerequisites
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+- PHP 8.1 or higher
+- MySQL 8.0 or higher
+- Composer
+- Web server (Apache/Nginx) or PHP built-in server
 
-## Setup
+## Installation
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+### 1. Clone the Repository
 
-## Important Change with index.php
+```bash
+git clone <repository-url>
+cd outdoor-activity-scheduler
+```
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+### 2. Install Dependencies
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+```bash
+composer install
+```
 
-**Please** read the user guide for a better explanation of how CI4 works!
+### 3. Database Setup
 
-## Repository Management
+Create a MySQL database:
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+```sql
+CREATE DATABASE activity_scheduler;
+```
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+Copy the environment file and configure database settings:
 
-## Server Requirements
+```bash
+cp env .env
+```
 
-PHP version 7.4 or higher is required, with the following extensions installed:
+Edit `.env` file with your database credentials:
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+```env
+database.default.hostname = localhost
+database.default.database = activity_scheduler
+database.default.username = your_username
+database.default.password = your_password
+database.default.DBDriver = MySQLi
+database.default.port = 3306
+```
 
-> [!WARNING]
-> The end of life date for PHP 7.4 was November 28, 2022.
-> The end of life date for PHP 8.0 was November 26, 2023.
-> If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> The end of life date for PHP 8.1 will be November 25, 2024.
+### 4. Run Database Migrations
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+```bash
+php spark migrate
+```
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+### 5. Start the Development Server
+
+```bash
+php spark serve
+```
+
+The application will be available at `http://localhost:8080`
+
+## API Endpoints
+
+### Weather Endpoints
+
+#### Get Weather Forecast
+```http
+GET /api/weather?location={location_code}
+```
+
+**Parameters:**
+- `location` - BMKG location code (Kode Wilayah Tingkat IV)
+
+**Response:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "utc_datetime": "2025-07-21 12:00:00",
+      "local_datetime": "2025-07-21 19:00:00",
+      "t": 28.5,
+      "hu": 75,
+      "weather_desc": "Berawan",
+      "weather_desc_en": "Cloudy",
+      "ws": 12,
+      "wd": "NE",
+      "tcc": 60,
+      "vs_text": "> 10"
+    }
+  ],
+  "source": "BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)"
+}
+```
+
+#### Get Location Options
+```http
+GET /api/locations
+```
+
+### Activity Endpoints
+
+#### Schedule New Activity
+```http
+POST /api/activities
+```
+
+**Request Body:**
+```json
+{
+  "activity_name": "Field Visit",
+  "location": "3275010001",
+  "preferred_date": "2025-07-22",
+  "selected_datetime": "2025-07-22 09:00:00",
+  "weather_condition": "Cerah",
+  "temperature": 28.5,
+  "humidity": 65
+}
+```
+
+#### Get All Activities
+```http
+GET /api/activities
+```
+
+#### Get Activity Statistics
+```http
+GET /api/activities/stats
+```
+
+#### Get Upcoming Activities
+```http
+GET /api/activities/upcoming
+```
+
+#### Search Activities
+```http
+GET /api/activities/search?q={keyword}
+```
+
+## File Structure
+
+```
+outdoor-activity-scheduler/
+├── app/
+│   ├── Controllers/
+│   │   └── Activity.php          # Main API controller
+│   ├── Models/
+│   │   └── ActivityModel.php     # Activity data model
+│   ├── Database/
+│   │   └── Migrations/
+│   │       └── CreateActivitiesTable.php
+│   ├── Filters/
+│   │   └── CORSFilter.php        # CORS handling
+│   └── Config/
+│       └── Routes.php            # API routes
+├── public/
+│   └── index.php                 # Entry point
+├── frontend/
+│   └── index.html               # Frontend interface
+├── .env                         # Environment configuration
+├── composer.json               # PHP dependencies
+└── README.md                   # This file
+```
+
+## Database Schema
+
+### Activities Table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT(11) | Primary key |
+| activity_name | VARCHAR(255) | Name of the activity |
+| location_code | VARCHAR(10) | BMKG location code |
+| location_name | VARCHAR(255) | Human-readable location name |
+| preferred_date | DATE | Preferred date for activity |
+| selected_datetime | DATETIME | Selected date and time |
+| weather_condition | VARCHAR(100) | Weather condition (Indonesian) |
+| weather_condition_en | VARCHAR(100) | Weather condition (English) |
+| temperature | DECIMAL(5,2) | Temperature in Celsius |
+| humidity | DECIMAL(5,2) | Humidity percentage |
+| wind_speed | DECIMAL(6,2) | Wind speed in km/h |
+| wind_direction | VARCHAR(3) | Wind direction |
+| cloud_coverage | DECIMAL(5,2) | Cloud coverage percentage |
+| visibility | VARCHAR(20) | Visibility range |
+| status | ENUM | scheduled, completed, cancelled |
+| notes | TEXT | Additional notes |
+| created_at | DATETIME | Record creation time |
+| updated_at | DATETIME | Record update time |
+
+## BMKG API Integration
+
+The application integrates with the BMKG (Indonesian Meteorological Agency) public weather forecast API:
+
+- **Base URL**: `https://api.bmkg.go.id/publik/prakiraan-cuaca`
+- **Format**: JSON
+- **Coverage**: 3-day forecast with 8 predictions per day (every 3 hours)
+- **Rate Limit**: 60 requests per minute per IP
+- **Location Codes**: Uses Indonesian administrative code level IV from Ministry of Home Affairs
+
+### Weather Filtering Logic
+
+The application considers the following weather conditions suitable for outdoor activities:
+- ✅ **Suitable**: Cerah (Clear), Berawan (Cloudy), Berawan Sebagian (Partly Cloudy)
+- ❌ **Not Suitable**: Any
