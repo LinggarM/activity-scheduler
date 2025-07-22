@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Outdoor Activity Scheduler</title>
     <link rel="icon" href="<?= base_url('public/images/favicon.ico') ?>" type="image/x-icon">
     <link rel="stylesheet" href="<?= base_url('public/css/style.css') ?>">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -26,12 +29,6 @@
                     <div class="form-group">
                         <label for="location">Location</label>
                         <select id="location" name="location" required>
-                            <option value="">Select Location...</option>
-                            <option value="3171010001">Jakarta Pusat - Gambir</option>
-                            <option value="3275010001">Bogor - Bogor Tengah</option>
-                            <option value="3276010001">Depok - Pancoran Mas</option>
-                            <option value="3171020001">Jakarta Pusat - Tanah Abang</option>
-                            <option value="3374010001">Sleman - Depok</option>
                         </select>
                     </div>
 
@@ -75,9 +72,31 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         let selectedTimeSlot = null;
         let currentActivityData = null;
+
+        $('#location').select2({
+            placeholder: 'Find location...',
+            ajax: {
+                url: '<?= base_url('api/search-location') ?>',
+                dataType: 'json',
+                delay: 250,
+                data: params => ({
+                    q: params.term
+                }),
+                processResults: data => ({
+                    results: data
+                }),
+                cache: true
+            },
+            minimumInputLength: 2,
+            width: '100%', // Make it full width
+            dropdownAutoWidth: true,
+            theme: 'default' // This ensures we're using the default theme we can override
+        });
 
         // Set minimum date to today
         document.getElementById('preferredDate').min = new Date().toISOString().split('T')[0];
@@ -86,20 +105,49 @@
         function getMockWeatherData() {
             const now = new Date();
             const mockData = [];
-            
+
             for (let i = 0; i < 24; i++) { // 3 days * 8 forecasts per day
                 const forecastTime = new Date(now.getTime() + (i * 3 * 60 * 60 * 1000));
-                const weatherConditions = [
-                    { desc: 'Cerah', desc_en: 'Clear', icon: '☀️', suitable: true },
-                    { desc: 'Berawan', desc_en: 'Cloudy', icon: '☁️', suitable: true },
-                    { desc: 'Berawan Sebagian', desc_en: 'Partly Cloudy', icon: '⛅', suitable: true },
-                    { desc: 'Hujan Ringan', desc_en: 'Light Rain', icon: '🌦️', suitable: false },
-                    { desc: 'Hujan Sedang', desc_en: 'Moderate Rain', icon: '🌧️', suitable: false },
-                    { desc: 'Hujan Lebat', desc_en: 'Heavy Rain', icon: '⛈️', suitable: false }
+                const weatherConditions = [{
+                        desc: 'Cerah',
+                        desc_en: 'Clear',
+                        icon: '☀️',
+                        suitable: true
+                    },
+                    {
+                        desc: 'Berawan',
+                        desc_en: 'Cloudy',
+                        icon: '☁️',
+                        suitable: true
+                    },
+                    {
+                        desc: 'Berawan Sebagian',
+                        desc_en: 'Partly Cloudy',
+                        icon: '⛅',
+                        suitable: true
+                    },
+                    {
+                        desc: 'Hujan Ringan',
+                        desc_en: 'Light Rain',
+                        icon: '🌦️',
+                        suitable: false
+                    },
+                    {
+                        desc: 'Hujan Sedang',
+                        desc_en: 'Moderate Rain',
+                        icon: '🌧️',
+                        suitable: false
+                    },
+                    {
+                        desc: 'Hujan Lebat',
+                        desc_en: 'Heavy Rain',
+                        icon: '⛈️',
+                        suitable: false
+                    }
                 ];
-                
+
                 const weather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
-                
+
                 mockData.push({
                     utc_datetime: forecastTime.toISOString().replace('T', ' ').substring(0, 19),
                     local_datetime: forecastTime.toISOString().replace('T', ' ').substring(0, 19),
@@ -115,8 +163,10 @@
                     suitable: weather.suitable
                 });
             }
-            
-            return { data: mockData };
+
+            return {
+                data: mockData
+            };
         }
 
         function getWeatherIcon(description) {
@@ -134,7 +184,7 @@
                 'hujan lebat': '⛈️',
                 'heavy rain': '⛈️'
             };
-            
+
             return icons[description.toLowerCase()] || '🌤️';
         }
 
@@ -144,10 +194,11 @@
         }
 
         function displayWeatherSuggestions(weatherData, selectedDate) {
+            console.log(weatherData);
             const timeSlots = document.getElementById('timeSlots');
             const weatherSuggestions = document.getElementById('weatherSuggestions');
             const weatherResults = document.getElementById('weatherResults');
-            
+
             // Filter for selected date and suitable weather
             const selectedDateStr = selectedDate;
             const suitableSlots = weatherData.data.filter(item => {
@@ -168,17 +219,17 @@
 
             weatherResults.style.display = 'none';
             weatherSuggestions.style.display = 'block';
-            
+
             timeSlots.innerHTML = '';
-            
+
             suitableSlots.forEach((slot, index) => {
                 const timeSlotEl = document.createElement('div');
                 timeSlotEl.className = 'time-slot';
                 timeSlotEl.dataset.index = index;
-                
+
                 const time = slot.local_datetime.split(' ')[1].substring(0, 5);
                 const icon = getWeatherIcon(slot.weather_desc);
-                
+
                 timeSlotEl.innerHTML = `
                     <div class="time-slot-header">
                         <div class="time-slot-time">${time}</div>
@@ -194,7 +245,7 @@
                         <div class="weather-param">☁️ ${slot.tcc}% Cloud</div>
                     </div>
                 `;
-                
+
                 timeSlotEl.addEventListener('click', () => selectTimeSlot(timeSlotEl, slot));
                 timeSlots.appendChild(timeSlotEl);
             });
@@ -205,42 +256,47 @@
             document.querySelectorAll('.time-slot.selected').forEach(el => {
                 el.classList.remove('selected');
             });
-            
+
             // Select current
             element.classList.add('selected');
             selectedTimeSlot = slotData;
-            
+
             // Show confirm button
             document.getElementById('confirmBtn').style.display = 'block';
         }
 
         document.getElementById('activityForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const formData = new FormData(this);
             const activityName = formData.get('activityName');
             const location = formData.get('location');
             const preferredDate = formData.get('preferredDate');
-            
-            currentActivityData = { activityName, location, preferredDate };
-            
+
+            currentActivityData = {
+                activityName,
+                location,
+                preferredDate
+            };
+            console.log(currentActivityData);
+
             // Show loading
             document.getElementById('loading').style.display = 'block';
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('successMessage').style.display = 'none';
-            
+
             try {
                 // Simulate API call delay
                 await new Promise(resolve => setTimeout(resolve, 1500));
-                
+
                 // In real implementation, this would call the BMKG API
                 // const response = await fetch(`https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${location}`);
                 // const weatherData = await response.json();
-                
+
                 const weatherData = getMockWeatherData();
                 displayWeatherSuggestions(weatherData, preferredDate);
-                
+
             } catch (error) {
                 document.getElementById('errorMessage').textContent = 'Failed to fetch weather data. Please try again.';
                 document.getElementById('errorMessage').style.display = 'block';
@@ -252,14 +308,14 @@
 
         document.getElementById('confirmBtn').addEventListener('click', async function() {
             if (!selectedTimeSlot || !currentActivityData) return;
-            
+
             this.disabled = true;
             this.textContent = '⏳ Saving...';
-            
+
             try {
                 // Simulate saving to database
                 await new Promise(resolve => setTimeout(resolve, 1000));
-                
+
                 // In real implementation, this would send data to CodeIgniter backend
                 const activityData = {
                     ...currentActivityData,
@@ -268,14 +324,14 @@
                     temperature: selectedTimeSlot.t,
                     humidity: selectedTimeSlot.hu
                 };
-                
+
                 document.getElementById('successMessage').innerHTML = `
                     <strong>✅ Activity Scheduled Successfully!</strong><br>
                     <strong>${currentActivityData.activityName}</strong> has been scheduled for 
                     <strong>${selectedTimeSlot.local_datetime}</strong> with <strong>${selectedTimeSlot.weather_desc}</strong> conditions.
                 `;
                 document.getElementById('successMessage').style.display = 'block';
-                
+
                 // Reset form and selections
                 document.getElementById('activityForm').reset();
                 document.getElementById('preferredDate').min = new Date().toISOString().split('T')[0];
@@ -288,7 +344,7 @@
                     </p>
                 `;
                 document.getElementById('weatherResults').style.display = 'block';
-                
+
             } catch (error) {
                 document.getElementById('errorMessage').textContent = 'Failed to save activity. Please try again.';
                 document.getElementById('errorMessage').style.display = 'block';
@@ -300,4 +356,5 @@
         });
     </script>
 </body>
+
 </html>

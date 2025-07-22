@@ -260,4 +260,25 @@ class Activity extends ResourceController
             'data' => $locations
         ]);
     }
+
+    public function searchLocation()
+    {
+        $term = $this->request->getGet('q');
+        $jsonPath = WRITEPATH . 'uploads\files\wilayah.json';
+
+        if (!file_exists($jsonPath)) {
+            return $this->response->setJSON([]);
+        }
+
+        $data = json_decode(file_get_contents($jsonPath), true);
+        $results = [];
+
+        foreach ($data as $item) {
+            if (!$term || stripos($item['text'], $term) !== false) {
+                $results[] = $item;
+            }
+        }
+
+        return $this->response->setJSON($results);
+    }
 }

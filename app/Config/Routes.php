@@ -9,7 +9,8 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'ActivityScheduler::index');
 $routes->get('scheduler', 'ActivityScheduler::index');
 $routes->get('bmkg_api', 'ActivityScheduler::bmkg_api');
-$routes->get('dbtest', 'DBTest::index');
+$routes->get('dbtest', 'Test::dbtest');
+$routes->get('csv_to_json', 'Test::csv_to_json');
 
 // API Routes for Activity Scheduler
 $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
@@ -17,6 +18,7 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     // Weather forecast routes
     $routes->get('weather', 'Activity::getWeatherForecast');
     $routes->get('locations', 'Activity::getLocationOptions');
+    $routes->get('search-location', 'Activity::searchLocation');
     
     // Activity management routes
     $routes->post('activities', 'Activity::scheduleActivity');
