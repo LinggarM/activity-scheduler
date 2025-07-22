@@ -1,34 +1,40 @@
 # 🌤️ Outdoor Activity Scheduler
 
-A CodeIgniter 4 web application that helps you plan outdoor activities based on weather forecasts from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika) Indonesia.
+A CodeIgniter 4 web application that helps you plan outdoor activities based on weather forecasts from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika) Indonesia. The application analyzes weather forecasts to suggest optimal time slots with favorable weather conditions for your outdoor activities.
 
 ## 📋 Features
 
-- **Weather Integration**: Real-time weather data from BMKG API
-- **Smart Scheduling**: Automatically suggests optimal time slots based on weather conditions
-- **Location Search**: Search and select from Indonesian cities/districts
-- **Activity Management**: Create, view, update, and manage scheduled activities
-- **Weather Filtering**: Filters out unsuitable weather conditions (rain, storms)
-- **Statistics Dashboard**: View activity statistics and weather summaries
-- **Responsive Design**: Mobile-friendly interface
-- **RESTful API**: Complete API endpoints for all operations
+### Frontend
+- 📱 **Responsive Design**: Mobile-friendly interface with modern UI
+- 🌤️ **Interactive Weather Display**: Real-time weather forecast visualization
+- ⏰ **Smart Time Slot Selection**: Choose optimal times based on weather conditions
+- ✨ **Modern Animations**: Smooth transitions and user interactions
+- 🔍 **Location Search**: Intelligent search with Select2 integration
+
+### Backend
+- 🚀 **CodeIgniter 4**: Built with robust PHP framework
+- 🌐 **BMKG API Integration**: Real-time weather data from Indonesian Meteorological Agency
+- 💾 **Activity Management**: Create, view, update, and manage scheduled activities
+- 🔍 **Smart Weather Filtering**: Automatically filters out unsuitable weather conditions (rain, storms)
+- 📊 **Statistics Dashboard**: View activity statistics and weather summaries
+- 🏛️ **RESTful API**: Complete API endpoints for all operations
 
 ## 🛠️ Tech Stack
 
-- **Backend**: CodeIgniter 4
-- **Database**: MySQL
+- **Backend**: PHP 7.4.3, CodeIgniter 4
+- **Database**: MariaDB 10.4.11
 - **Frontend**: HTML5, CSS3, JavaScript (jQuery)
-- **API Integration**: BMKG Weather API
+- **API Integration**: BMKG Weather Forecast API
 - **UI Components**: Select2 for location search
-- **Styling**: Custom CSS with gradient backgrounds
+- **Styling**: Custom CSS with gradient backgrounds and modern design principles
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- PHP 8.1 or higher
+- PHP 7.4.3 or higher
 - Composer
-- MySQL 5.7 or higher
+- MariaDB 10.4.11 or MySQL 5.7+
 - Web server (Apache/Nginx)
 
 ### Setup Steps
@@ -36,7 +42,7 @@ A CodeIgniter 4 web application that helps you plan outdoor activities based on 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd activity-scheduler
+   cd outdoor-activity-scheduler
    ```
 
 2. **Install dependencies**
@@ -52,7 +58,7 @@ A CodeIgniter 4 web application that helps you plan outdoor activities based on 
 4. **Configure database in `.env`**
    ```env
    database.default.hostname = localhost
-   database.default.database = db_activity_scheduler
+   database.default.database = activity_scheduler
    database.default.username = root
    database.default.password = 
    database.default.DBDriver = MySQLi
@@ -61,13 +67,13 @@ A CodeIgniter 4 web application that helps you plan outdoor activities based on 
 
 5. **Set application URL**
    ```env
-   app.baseURL = 'http://localhost/activity-scheduler/'
+   app.baseURL = 'http://localhost/outdoor-activity-scheduler/'
    CI_ENVIRONMENT = development
    ```
 
 6. **Create database**
    ```sql
-   CREATE DATABASE db_activity_scheduler;
+   CREATE DATABASE activity_scheduler;
    ```
 
 7. **Run migrations**
@@ -115,26 +121,52 @@ A CodeIgniter 4 web application that helps you plan outdoor activities based on 
 ## 🚀 API Endpoints
 
 ### Weather Endpoints
-- `GET /api/weather` - Get weather forecast
-- `GET /api/locations` - Get location options
-- `GET /api/search-location` - Search locations
+- `GET /api/weather?location={location_code}` - Get weather forecast for specific location
+- `GET /api/locations` - Get available location options
 
 ### Activity Management
 - `POST /api/activities` - Schedule new activity
-- `GET /api/activities` - Get all activities
-- `GET /api/activities/{id}` - Get specific activity
-- `PUT /api/activities/{id}` - Update activity
-- `DELETE /api/activities/{id}` - Delete activity
-- `PATCH /api/activities/{id}/status` - Update activity status
-
-### Analytics & Reporting
+- `GET /api/activities` - Get all scheduled activities
 - `GET /api/activities/stats` - Get activity statistics
-- `GET /api/activities/search` - Search activities
 - `GET /api/activities/upcoming` - Get upcoming activities
-- `GET /api/activities/weather-summary` - Weather summary
-- `GET /api/activities/location/{code}` - Activities by location
-- `GET /api/activities/status/{status}` - Activities by status
-- `GET /api/activities/date-range` - Activities by date range
+
+## 🌐 BMKG API Integration
+
+The application integrates with the BMKG (Indonesian Meteorological Agency) public weather forecast API:
+
+- **Base URL**: `https://api.bmkg.go.id/publik/prakiraan-cuaca`
+- **Coverage**: 3-day forecast with 8 predictions per day (every 3 hours)
+- **Rate Limit**: 60 requests per minute per IP
+- **Location Codes**: Uses Indonesian administrative code level IV from Ministry of Home Affairs
+- **Format**: JSON with local timezone conversion (Asia/Jakarta)
+
+### Weather Data Structure
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "utc_datetime": "2025-07-21 12:00:00",
+      "local_datetime": "2025-07-21 19:00:00",
+      "t": 28.5,
+      "hu": 75,
+      "weather_desc": "Berawan",
+      "weather_desc_en": "Cloudy",
+      "ws": 12,
+      "wd": "NE",
+      "tcc": 60,
+      "vs_text": "> 10"
+    }
+  ],
+  "source": "BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)"
+}
+```
+
+### Weather Filtering Logic
+
+The application considers the following weather conditions suitable for outdoor activities:
+- ✅ **Suitable**: Cerah (Clear), Berawan (Cloudy), Berawan Sebagian (Partly Cloudy)
+- ❌ **Not Suitable**: Any condition containing rain, storms, or severe weather keywords
 
 ## 🌐 Usage
 
@@ -144,14 +176,15 @@ A CodeIgniter 4 web application that helps you plan outdoor activities based on 
 
 2. **Schedule Activity**:
    - Enter activity name
-   - Search and select location
+   - Search and select location using intelligent search
    - Choose preferred date
    - Click "Find Optimal Time Slots"
 
 3. **Select Time Slot**:
-   - Review weather-based suggestions
+   - Review weather-based suggestions with detailed conditions
+   - View temperature, humidity, wind speed, and visibility
    - Click on preferred time slot
-   - Confirm selection
+   - Confirm selection with optional notes
 
 ### API Usage
 
@@ -163,18 +196,18 @@ fetch('/api/activities', {
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-        activityName: "Field Survey",
-        location: "3171010001",
-        locationTitle: "Jakarta Pusat - Gambir",
-        preferredDate: "2024-12-25",
-        selectedTime: "2024-12-25 10:00:00",
-        weatherCondition: "Cerah",
-        weatherConditionEn: "Clear",
+        activity_name: "Field Survey",
+        location_code: "3171010001",
+        location_name: "Jakarta Pusat - Gambir",
+        preferred_date: "2025-07-22",
+        selected_datetime: "2025-07-22 10:00:00",
+        weather_condition: "Cerah",
+        weather_condition_en: "Clear",
         temperature: 28,
         humidity: 65,
-        windSpeed: 12,
-        windDirection: "NE",
-        cloudCoverage: 20,
+        wind_speed: 12,
+        wind_direction: "NE",
+        cloud_coverage: 20,
         visibility: "> 10"
     })
 });
@@ -182,22 +215,21 @@ fetch('/api/activities', {
 
 ## ⚙️ Configuration
 
+### Application Settings
+```env
+app.timezone = 'Asia/Jakarta'
+CI_ENVIRONMENT = development
+```
+
 ### BMKG API Settings
 ```env
 bmkg.api.baseUrl = 'https://api.bmkg.go.id'
 bmkg.api.timeout = 30
-bmkg.api.userAgent = 'Activity-Scheduler/1.0'
 ```
 
-### Weather Cache
+### Weather Cache Configuration
 ```env
 weather.cache.duration = 1800  # 30 minutes
-```
-
-### Activity Limits
-```env
-activity.max.perDay = 10
-app.timezone = 'Asia/Jakarta'
 ```
 
 ## 🔧 Customization
@@ -215,19 +247,20 @@ $locations = [
 
 ### Weather Condition Filtering
 
-Modify the `filterSuitableWeather()` method to adjust weather criteria:
+Modify the weather filtering logic in the controller:
 
 ```php
 $suitableConditions = ['cerah', 'clear', 'berawan', 'cloudy'];
-$rainKeywords = ['hujan', 'rain', 'storm'];
+$unsuitable_keywords = ['hujan', 'rain', 'storm', 'badai'];
 ```
 
-### Styling
+### Styling Customization
 
 Customize the appearance by editing `public/css/style.css`:
-- Change gradient colors
-- Modify component styles
-- Adjust responsive breakpoints
+- Modern gradient backgrounds
+- Responsive component styles
+- Smooth animations and transitions
+- Mobile-first design approach
 
 ## 🐛 Troubleshooting
 
@@ -235,30 +268,59 @@ Customize the appearance by editing `public/css/style.css`:
 
 1. **Database Connection Error**
    - Check database credentials in `.env`
-   - Ensure MySQL service is running
-   - Verify database exists
+   - Ensure MariaDB/MySQL service is running
+   - Verify database exists and user has proper permissions
 
-2. **BMKG API Timeout**
+2. **BMKG API Issues**
    - Check internet connection
-   - API may be temporarily unavailable
-   - Falls back to mock data automatically
+   - API may have rate limits (60 requests/minute)
+   - Application automatically falls back to cached data when API is unavailable
 
-3. **Location Search Not Working**
-   - Ensure `wilayah.json` file exists in `writable/uploads/files/`
-   - Check file permissions
+3. **Location Search Problems**
+   - Verify location data is properly loaded
+   - Check Select2 JavaScript library inclusion
+   - Ensure proper AJAX endpoint configuration
 
-4. **CSS/JS Not Loading**
-   - Verify `app.baseURL` in `.env`
-   - Check web server configuration
-   - Clear browser cache
+4. **Static Files Not Loading**
+   - Verify `app.baseURL` configuration in `.env`
+   - Check web server document root settings
+   - Clear browser cache and check developer console
 
 ### Debug Mode
 
-Enable debugging in `.env`:
+Enable detailed debugging in `.env`:
 ```env
 CI_ENVIRONMENT = development
-app.CSRFProtection = false  # For API testing
 logger.threshold = 4        # Debug level logging
+app.CSRFProtection = false  # For API testing only
+```
+
+## 📁 File Structure
+
+```
+outdoor-activity-scheduler/
+├── app/
+│   ├── Controllers/
+│   │   └── Activity.php          # Main API controller
+│   ├── Models/
+│   │   └── ActivityModel.php     # Activity data model
+│   ├── Database/
+│   │   └── Migrations/
+│   │       └── CreateActivitiesTable.php
+│   ├── Filters/
+│   │   └── CORSFilter.php        # CORS handling
+│   └── Config/
+│       └── Routes.php            # API routes configuration
+├── public/
+│   ├── index.php                # Application entry point
+│   ├── css/
+│   │   └── style.css           # Custom styling
+│   └── js/
+│       └── app.js              # Frontend JavaScript
+├── writable/                    # Logs and cache
+├── .env                        # Environment configuration
+├── composer.json              # PHP dependencies
+└── README.md                  # Documentation
 ```
 
 ## 🤝 Contributing
@@ -275,16 +337,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **BMKG** - For providing weather data API
-- **CodeIgniter Team** - For the excellent framework
-- **Select2** - For the location search component
+- **BMKG** - For providing comprehensive weather data API
+- **CodeIgniter Team** - For the excellent PHP framework
+- **Select2** - For the enhanced location search component
+- **Indonesian Ministry of Home Affairs** - For location code standardization
 
 ## 📞 Support
 
 For support and questions:
 - Create an issue in the repository
 - Check the [CodeIgniter 4 Documentation](https://codeigniter.com/user_guide/)
-- Review BMKG API documentation
+- Review BMKG API documentation for weather data specifications
 
 ---
 
