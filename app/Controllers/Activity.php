@@ -14,6 +14,7 @@ class Activity extends ResourceController
     {
         $request = service('request');
         $location = $request->getGet('location');
+        $date = $request->getGet('date') ?? date('Y-m-d');
         
         if (!$location) {
             return $this->respond([
@@ -34,7 +35,7 @@ class Activity extends ResourceController
             }
 
             // Filter suitable weather conditions
-            $suitableSlots = $this->filterSuitableWeather($bmkgData);
+            $suitableSlots = $this->filterSuitableWeather($bmkgData[0]['cuaca'], $date);
 
             return $this->respond([
                 'status' => 'success',
@@ -51,6 +52,83 @@ class Activity extends ResourceController
         }
     }
 
+    private function fetchBMKGWeather($locationCode)
+    {
+        $client = \Config\Services::curlrequest();
+        
+        try {
+            $response = $client->request('GET', "https://api.bmkg.go.id/publik/prakiraan-cuaca", [
+                'query' => ['adm4' => $locationCode],
+                'timeout' => 30,
+                'headers' => [
+                    'User-Agent' => 'Activity-Scheduler/1.0',
+                    'Accept' => 'application/json'
+                ]
+            ]);
+
+            if ($response->getStatusCode() == 200) {
+                $body = $response->getBody();
+                $data = json_decode($body, true);
+                
+                if (json_last_error() === JSON_ERROR_NONE && isset($data['data'])) {
+                    return $data['data'];
+                }
+            }
+
+            // Fallback to mock data if API fails
+            return $this->getMockWeatherData();
+
+        } catch (\Exception $e) {
+            log_message('error', 'BMKG API Error: ' . $e->getMessage());
+            // Return mock data as fallback
+            return $this->getMockWeatherData();
+        }
+    }
+
+    private function filterSuitableWeather(array $weatherData, string $date)
+    {
+        $suitableConditions = ['cerah', 'clear', 'berawan', 'cloudy', 'partly cloudy', 'berawan sebagian'];
+        $rainKeywords = ['hujan', 'rain', 'storm', 'thunderstorm'];
+    
+        $suitableSlots = [];
+    
+        foreach ($weatherData as $dailyForecasts) {
+            foreach ($dailyForecasts as $forecast) {
+                // Pastikan format date cocok
+                $forecastDate = date('Y-m-d', strtotime($forecast['local_datetime']));
+                if ($forecastDate !== $date) {
+                    continue;
+                }
+    
+                $weatherDesc = strtolower($forecast['weather_desc'] ?? '');
+                $weatherDescEn = strtolower($forecast['weather_desc_en'] ?? '');
+    
+                // Cek apakah deskripsi cuaca cocok dengan kondisi yang sesuai
+                $isSuitable = false;
+                foreach ($suitableConditions as $condition) {
+                    if (strpos($weatherDesc, $condition) !== false || strpos($weatherDescEn, $condition) !== false) {
+                        $isSuitable = true;
+                        break;
+                    }
+                }
+    
+                // Jika mengandung kata terkait hujan, langsung tidak cocok
+                foreach ($rainKeywords as $keyword) {
+                    if (strpos($weatherDesc, $keyword) !== false || strpos($weatherDescEn, $keyword) !== false) {
+                        $isSuitable = false;
+                        break;
+                    }
+                }
+    
+                if ($isSuitable) {
+                    $suitableSlots[] = $forecast;
+                }
+            }
+        }
+    
+        return $suitableSlots;
+    }    
+
     public function scheduleActivity()
     {
         $request = service('request');
@@ -59,11 +137,11 @@ class Activity extends ResourceController
         // Validation
         $validation = \Config\Services::validation();
         $validation->setRules([
-            'activity_name' => 'required|min_length[3]|max_length[255]',
+            'activityName' => 'required|min_length[3]|max_length[255]',
             'location' => 'required',
-            'preferred_date' => 'required|valid_date',
-            'selected_datetime' => 'required',
-            'weather_condition' => 'required',
+            'preferredDate' => 'required|valid_date',
+            'selectedTime' => 'required',
+            'weatherCondition' => 'required',
             'temperature' => 'required|numeric',
             'humidity' => 'required|numeric'
         ]);
@@ -79,16 +157,26 @@ class Activity extends ResourceController
         try {
             $model = new ActivityModel();
             $activityId = $model->insert([
-                'activity_name' => $json->activity_name,
+                'activity_name' => $json->activityName,
                 'location_code' => $json->location,
-                'preferred_date' => $json->preferred_date,
-                'selected_datetime' => $json->selected_datetime,
-                'weather_condition' => $json->weather_condition,
+                'location_name' => $json->locationTitle,
+                'preferred_date' => $json->preferredDate,
+                'selected_datetime' => $json->selectedTime,
+                'weather_condition' => $json->weatherCondition,
+                'weather_condition_en' => $json->weatherConditionEn,
                 'temperature' => $json->temperature,
                 'humidity' => $json->humidity,
+                'wind_speed' => $json->windSpeed,
+                'wind_direction' => $json->windDirection,
+                'cloud_coverage' => $json->cloudCoverage,
+                'visibility' => $json->visibility,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ]);
+            if ($activityId === false) {
+                $errors = $model->errors();
+                dd($errors);
+            }
 
             if ($activityId) {
                 return $this->respond([
@@ -132,39 +220,6 @@ class Activity extends ResourceController
         }
     }
 
-    private function fetchBMKGWeather($locationCode)
-    {
-        $client = \Config\Services::curlrequest();
-        
-        try {
-            $response = $client->request('GET', "https://api.bmkg.go.id/publik/prakiraan-cuaca", [
-                'query' => ['adm4' => $locationCode],
-                'timeout' => 30,
-                'headers' => [
-                    'User-Agent' => 'Activity-Scheduler/1.0',
-                    'Accept' => 'application/json'
-                ]
-            ]);
-
-            if ($response->getStatusCode() == 200) {
-                $body = $response->getBody();
-                $data = json_decode($body, true);
-                
-                if (json_last_error() === JSON_ERROR_NONE && isset($data['data'])) {
-                    return $data['data'];
-                }
-            }
-
-            // Fallback to mock data if API fails
-            return $this->getMockWeatherData();
-
-        } catch (\Exception $e) {
-            log_message('error', 'BMKG API Error: ' . $e->getMessage());
-            // Return mock data as fallback
-            return $this->getMockWeatherData();
-        }
-    }
-
     private function getMockWeatherData()
     {
         $mockData = [];
@@ -202,41 +257,6 @@ class Activity extends ResourceController
         }
         
         return $mockData;
-    }
-
-    private function filterSuitableWeather($weatherData)
-    {
-        $suitableConditions = ['cerah', 'clear', 'berawan', 'cloudy', 'partly cloudy', 'berawan sebagian'];
-        $suitableSlots = [];
-
-        foreach ($weatherData as $forecast) {
-            $weatherDesc = strtolower($forecast['weather_desc']);
-            $weatherDescEn = strtolower($forecast['weather_desc_en']);
-            
-            // Check if weather is suitable (not rainy)
-            $isSuitable = false;
-            foreach ($suitableConditions as $condition) {
-                if (strpos($weatherDesc, $condition) !== false || strpos($weatherDescEn, $condition) !== false) {
-                    $isSuitable = true;
-                    break;
-                }
-            }
-            
-            // Also exclude if contains rain-related words
-            $rainKeywords = ['hujan', 'rain', 'storm', 'thunderstorm'];
-            foreach ($rainKeywords as $keyword) {
-                if (strpos($weatherDesc, $keyword) !== false || strpos($weatherDescEn, $keyword) !== false) {
-                    $isSuitable = false;
-                    break;
-                }
-            }
-            
-            if ($isSuitable) {
-                $suitableSlots[] = $forecast;
-            }
-        }
-
-        return $suitableSlots;
     }
 
     public function getLocationOptions()

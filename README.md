@@ -1,198 +1,93 @@
-# Outdoor Activity Scheduler
+# 🌤️ Outdoor Activity Scheduler
 
-A web application that helps users schedule outdoor activities by analyzing weather forecasts from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika) API to suggest optimal time slots with favorable weather conditions.
+A CodeIgniter 4 web application that helps you plan outdoor activities based on weather forecasts from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika) Indonesia.
 
-## Features
+## 📋 Features
 
-### Frontend
-- 📱 Responsive web interface
-- 🌤️ Interactive weather forecast display
-- ⏰ Time slot selection with weather conditions
-- 📊 Real-time weather data visualization
-- ✨ Modern UI with smooth animations
+- **Weather Integration**: Real-time weather data from BMKG API
+- **Smart Scheduling**: Automatically suggests optimal time slots based on weather conditions
+- **Location Search**: Search and select from Indonesian cities/districts
+- **Activity Management**: Create, view, update, and manage scheduled activities
+- **Weather Filtering**: Filters out unsuitable weather conditions (rain, storms)
+- **Statistics Dashboard**: View activity statistics and weather summaries
+- **Responsive Design**: Mobile-friendly interface
+- **RESTful API**: Complete API endpoints for all operations
 
-### Backend
-- 🚀 Built with CodeIgniter 4 framework
-- 🌐 RESTful API endpoints
-- 🏛️ Integration with BMKG Weather Forecast API
-- 💾 Local database storage for activities
-- 🔍 Smart weather filtering for outdoor activities
-- 📈 Activity statistics and reporting
+## 🛠️ Tech Stack
 
-## Technology Stack
+- **Backend**: CodeIgniter 4
+- **Database**: MySQL
+- **Frontend**: HTML5, CSS3, JavaScript (jQuery)
+- **API Integration**: BMKG Weather API
+- **UI Components**: Select2 for location search
+- **Styling**: Custom CSS with gradient backgrounds
 
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Backend**: PHP 8.1+, CodeIgniter 4
-- **Database**: MySQL 8.0+
-- **API**: BMKG Weather Forecast API
-- **Styling**: Custom CSS with modern design principles
+## 📦 Installation
 
-## Prerequisites
+### Prerequisites
 
 - PHP 8.1 or higher
-- MySQL 8.0 or higher
 - Composer
-- Web server (Apache/Nginx) or PHP built-in server
+- MySQL 5.7 or higher
+- Web server (Apache/Nginx)
 
-## Installation
+### Setup Steps
 
-### 1. Clone the Repository
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd activity-scheduler
+   ```
 
-```bash
-git clone <repository-url>
-cd outdoor-activity-scheduler
-```
+2. **Install dependencies**
+   ```bash
+   composer install
+   ```
 
-### 2. Install Dependencies
+3. **Environment Configuration**
+   ```bash
+   cp env .env
+   ```
 
-```bash
-composer install
-```
+4. **Configure database in `.env`**
+   ```env
+   database.default.hostname = localhost
+   database.default.database = db_activity_scheduler
+   database.default.username = root
+   database.default.password = 
+   database.default.DBDriver = MySQLi
+   database.default.port = 3306
+   ```
 
-### 3. Database Setup
+5. **Set application URL**
+   ```env
+   app.baseURL = 'http://localhost/activity-scheduler/'
+   CI_ENVIRONMENT = development
+   ```
 
-Create a MySQL database:
+6. **Create database**
+   ```sql
+   CREATE DATABASE db_activity_scheduler;
+   ```
 
-```sql
-CREATE DATABASE activity_scheduler;
-```
+7. **Run migrations**
+   ```bash
+   php spark migrate
+   ```
 
-Copy the environment file and configure database settings:
+8. **Set permissions** (Linux/Mac)
+   ```bash
+   chmod -R 777 writable/
+   ```
 
-```bash
-cp env .env
-```
+9. **Start development server**
+   ```bash
+   php spark serve
+   ```
 
-Edit `.env` file with your database credentials:
+   Or configure your web server to point to the `public/` directory.
 
-```env
-database.default.hostname = localhost
-database.default.database = activity_scheduler
-database.default.username = your_username
-database.default.password = your_password
-database.default.DBDriver = MySQLi
-database.default.port = 3306
-```
-
-### 4. Run Database Migrations
-
-```bash
-php spark migrate
-```
-
-### 5. Start the Development Server
-
-```bash
-php spark serve
-```
-
-The application will be available at `http://localhost:8080`
-
-## API Endpoints
-
-### Weather Endpoints
-
-#### Get Weather Forecast
-```http
-GET /api/weather?location={location_code}
-```
-
-**Parameters:**
-- `location` - BMKG location code (Kode Wilayah Tingkat IV)
-
-**Response:**
-```json
-{
-  "status": "success",
-  "data": [
-    {
-      "utc_datetime": "2025-07-21 12:00:00",
-      "local_datetime": "2025-07-21 19:00:00",
-      "t": 28.5,
-      "hu": 75,
-      "weather_desc": "Berawan",
-      "weather_desc_en": "Cloudy",
-      "ws": 12,
-      "wd": "NE",
-      "tcc": 60,
-      "vs_text": "> 10"
-    }
-  ],
-  "source": "BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)"
-}
-```
-
-#### Get Location Options
-```http
-GET /api/locations
-```
-
-### Activity Endpoints
-
-#### Schedule New Activity
-```http
-POST /api/activities
-```
-
-**Request Body:**
-```json
-{
-  "activity_name": "Field Visit",
-  "location": "3275010001",
-  "preferred_date": "2025-07-22",
-  "selected_datetime": "2025-07-22 09:00:00",
-  "weather_condition": "Cerah",
-  "temperature": 28.5,
-  "humidity": 65
-}
-```
-
-#### Get All Activities
-```http
-GET /api/activities
-```
-
-#### Get Activity Statistics
-```http
-GET /api/activities/stats
-```
-
-#### Get Upcoming Activities
-```http
-GET /api/activities/upcoming
-```
-
-#### Search Activities
-```http
-GET /api/activities/search?q={keyword}
-```
-
-## File Structure
-
-```
-outdoor-activity-scheduler/
-├── app/
-│   ├── Controllers/
-│   │   └── Activity.php          # Main API controller
-│   ├── Models/
-│   │   └── ActivityModel.php     # Activity data model
-│   ├── Database/
-│   │   └── Migrations/
-│   │       └── CreateActivitiesTable.php
-│   ├── Filters/
-│   │   └── CORSFilter.php        # CORS handling
-│   └── Config/
-│       └── Routes.php            # API routes
-├── public/
-│   └── index.php                 # Entry point
-├── frontend/
-│   └── index.html               # Frontend interface
-├── .env                         # Environment configuration
-├── composer.json               # PHP dependencies
-└── README.md                   # This file
-```
-
-## Database Schema
+## 🗄️ Database Schema
 
 ### Activities Table
 
@@ -200,10 +95,10 @@ outdoor-activity-scheduler/
 |--------|------|-------------|
 | id | INT(11) | Primary key |
 | activity_name | VARCHAR(255) | Name of the activity |
-| location_code | VARCHAR(10) | BMKG location code |
+| location_code | VARCHAR(20) | BMKG location code |
 | location_name | VARCHAR(255) | Human-readable location name |
-| preferred_date | DATE | Preferred date for activity |
-| selected_datetime | DATETIME | Selected date and time |
+| preferred_date | DATE | User's preferred date |
+| selected_datetime | DATETIME | Final selected date and time |
 | weather_condition | VARCHAR(100) | Weather condition (Indonesian) |
 | weather_condition_en | VARCHAR(100) | Weather condition (English) |
 | temperature | DECIMAL(5,2) | Temperature in Celsius |
@@ -212,23 +107,185 @@ outdoor-activity-scheduler/
 | wind_direction | VARCHAR(3) | Wind direction |
 | cloud_coverage | DECIMAL(5,2) | Cloud coverage percentage |
 | visibility | VARCHAR(20) | Visibility range |
-| status | ENUM | scheduled, completed, cancelled |
+| status | ENUM | scheduled/completed/cancelled |
 | notes | TEXT | Additional notes |
-| created_at | DATETIME | Record creation time |
-| updated_at | DATETIME | Record update time |
+| created_at | DATETIME | Creation timestamp |
+| updated_at | DATETIME | Last update timestamp |
 
-## BMKG API Integration
+## 🚀 API Endpoints
 
-The application integrates with the BMKG (Indonesian Meteorological Agency) public weather forecast API:
+### Weather Endpoints
+- `GET /api/weather` - Get weather forecast
+- `GET /api/locations` - Get location options
+- `GET /api/search-location` - Search locations
 
-- **Base URL**: `https://api.bmkg.go.id/publik/prakiraan-cuaca`
-- **Format**: JSON
-- **Coverage**: 3-day forecast with 8 predictions per day (every 3 hours)
-- **Rate Limit**: 60 requests per minute per IP
-- **Location Codes**: Uses Indonesian administrative code level IV from Ministry of Home Affairs
+### Activity Management
+- `POST /api/activities` - Schedule new activity
+- `GET /api/activities` - Get all activities
+- `GET /api/activities/{id}` - Get specific activity
+- `PUT /api/activities/{id}` - Update activity
+- `DELETE /api/activities/{id}` - Delete activity
+- `PATCH /api/activities/{id}/status` - Update activity status
 
-### Weather Filtering Logic
+### Analytics & Reporting
+- `GET /api/activities/stats` - Get activity statistics
+- `GET /api/activities/search` - Search activities
+- `GET /api/activities/upcoming` - Get upcoming activities
+- `GET /api/activities/weather-summary` - Weather summary
+- `GET /api/activities/location/{code}` - Activities by location
+- `GET /api/activities/status/{status}` - Activities by status
+- `GET /api/activities/date-range` - Activities by date range
 
-The application considers the following weather conditions suitable for outdoor activities:
-- ✅ **Suitable**: Cerah (Clear), Berawan (Cloudy), Berawan Sebagian (Partly Cloudy)
-- ❌ **Not Suitable**: Any
+## 🌐 Usage
+
+### Web Interface
+
+1. **Access the application** at `http://localhost:8080` (or your configured URL)
+
+2. **Schedule Activity**:
+   - Enter activity name
+   - Search and select location
+   - Choose preferred date
+   - Click "Find Optimal Time Slots"
+
+3. **Select Time Slot**:
+   - Review weather-based suggestions
+   - Click on preferred time slot
+   - Confirm selection
+
+### API Usage
+
+**Schedule Activity Example:**
+```javascript
+fetch('/api/activities', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        activityName: "Field Survey",
+        location: "3171010001",
+        locationTitle: "Jakarta Pusat - Gambir",
+        preferredDate: "2024-12-25",
+        selectedTime: "2024-12-25 10:00:00",
+        weatherCondition: "Cerah",
+        weatherConditionEn: "Clear",
+        temperature: 28,
+        humidity: 65,
+        windSpeed: 12,
+        windDirection: "NE",
+        cloudCoverage: 20,
+        visibility: "> 10"
+    })
+});
+```
+
+## ⚙️ Configuration
+
+### BMKG API Settings
+```env
+bmkg.api.baseUrl = 'https://api.bmkg.go.id'
+bmkg.api.timeout = 30
+bmkg.api.userAgent = 'Activity-Scheduler/1.0'
+```
+
+### Weather Cache
+```env
+weather.cache.duration = 1800  # 30 minutes
+```
+
+### Activity Limits
+```env
+activity.max.perDay = 10
+app.timezone = 'Asia/Jakarta'
+```
+
+## 🔧 Customization
+
+### Adding New Locations
+
+Edit the `getLocationOptions()` method in `Controller/Activity.php`:
+
+```php
+$locations = [
+    ['code' => 'LOCATION_CODE', 'name' => 'Location Name'],
+    // Add more locations
+];
+```
+
+### Weather Condition Filtering
+
+Modify the `filterSuitableWeather()` method to adjust weather criteria:
+
+```php
+$suitableConditions = ['cerah', 'clear', 'berawan', 'cloudy'];
+$rainKeywords = ['hujan', 'rain', 'storm'];
+```
+
+### Styling
+
+Customize the appearance by editing `public/css/style.css`:
+- Change gradient colors
+- Modify component styles
+- Adjust responsive breakpoints
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Error**
+   - Check database credentials in `.env`
+   - Ensure MySQL service is running
+   - Verify database exists
+
+2. **BMKG API Timeout**
+   - Check internet connection
+   - API may be temporarily unavailable
+   - Falls back to mock data automatically
+
+3. **Location Search Not Working**
+   - Ensure `wilayah.json` file exists in `writable/uploads/files/`
+   - Check file permissions
+
+4. **CSS/JS Not Loading**
+   - Verify `app.baseURL` in `.env`
+   - Check web server configuration
+   - Clear browser cache
+
+### Debug Mode
+
+Enable debugging in `.env`:
+```env
+CI_ENVIRONMENT = development
+app.CSRFProtection = false  # For API testing
+logger.threshold = 4        # Debug level logging
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **BMKG** - For providing weather data API
+- **CodeIgniter Team** - For the excellent framework
+- **Select2** - For the location search component
+
+## 📞 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the [CodeIgniter 4 Documentation](https://codeigniter.com/user_guide/)
+- Review BMKG API documentation
+
+---
+
+**Made with ❤️ for better outdoor activity planning in Indonesia** 🇮🇩

@@ -22,7 +22,7 @@ class CreateActivitiesTable extends Migration
             ],
             'location_code' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '10',
+                'constraint' => '20',
                 'null'       => false,
                 'comment'    => 'BMKG location code (Kode Wilayah Tingkat IV)',
             ],

@@ -24,7 +24,9 @@ class ActivityModel extends Model
         'temperature',
         'humidity',
         'wind_speed',
+        'wind_direction',
         'cloud_coverage',
+        'visibility',
         'status',
         'notes',
         'created_at',
@@ -38,7 +40,7 @@ class ActivityModel extends Model
     // Validation rules
     protected $validationRules = [
         'activity_name' => 'required|min_length[3]|max_length[255]',
-        'location_code' => 'required|min_length[10]|max_length[10]',
+        'location_code' => 'required|min_length[10]|max_length[13]',
         'preferred_date' => 'required|valid_date',
         'selected_datetime' => 'required',
         'weather_condition' => 'required|max_length[100]',

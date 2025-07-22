@@ -78,6 +78,7 @@
         let selectedTimeSlot = null;
         let currentActivityData = null;
 
+        // Location select2 initialization
         $('#location').select2({
             placeholder: 'Find location...',
             ajax: {
@@ -101,118 +102,19 @@
         // Set minimum date to today
         document.getElementById('preferredDate').min = new Date().toISOString().split('T')[0];
 
-        // Mock BMKG API response for demonstration
-        function getMockWeatherData() {
-            const now = new Date();
-            const mockData = [];
-
-            for (let i = 0; i < 24; i++) { // 3 days * 8 forecasts per day
-                const forecastTime = new Date(now.getTime() + (i * 3 * 60 * 60 * 1000));
-                const weatherConditions = [{
-                        desc: 'Cerah',
-                        desc_en: 'Clear',
-                        icon: '☀️',
-                        suitable: true
-                    },
-                    {
-                        desc: 'Berawan',
-                        desc_en: 'Cloudy',
-                        icon: '☁️',
-                        suitable: true
-                    },
-                    {
-                        desc: 'Berawan Sebagian',
-                        desc_en: 'Partly Cloudy',
-                        icon: '⛅',
-                        suitable: true
-                    },
-                    {
-                        desc: 'Hujan Ringan',
-                        desc_en: 'Light Rain',
-                        icon: '🌦️',
-                        suitable: false
-                    },
-                    {
-                        desc: 'Hujan Sedang',
-                        desc_en: 'Moderate Rain',
-                        icon: '🌧️',
-                        suitable: false
-                    },
-                    {
-                        desc: 'Hujan Lebat',
-                        desc_en: 'Heavy Rain',
-                        icon: '⛈️',
-                        suitable: false
-                    }
-                ];
-
-                const weather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
-
-                mockData.push({
-                    utc_datetime: forecastTime.toISOString().replace('T', ' ').substring(0, 19),
-                    local_datetime: forecastTime.toISOString().replace('T', ' ').substring(0, 19),
-                    t: Math.floor(Math.random() * 10) + 25, // 25-35°C
-                    hu: Math.floor(Math.random() * 30) + 60, // 60-90%
-                    weather_desc: weather.desc,
-                    weather_desc_en: weather.desc_en,
-                    ws: Math.floor(Math.random() * 15) + 5, // 5-20 km/h
-                    wd: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.floor(Math.random() * 8)],
-                    tcc: Math.floor(Math.random() * 100),
-                    vs_text: '> 10',
-                    icon: weather.icon,
-                    suitable: weather.suitable
-                });
-            }
-
-            return {
-                data: mockData
-            };
-        }
-
-        function getWeatherIcon(description) {
-            const icons = {
-                'cerah': '☀️',
-                'clear': '☀️',
-                'berawan': '☁️',
-                'cloudy': '☁️',
-                'partly cloudy': '⛅',
-                'berawan sebagian': '⛅',
-                'hujan': '🌧️',
-                'rain': '🌧️',
-                'hujan ringan': '🌦️',
-                'light rain': '🌦️',
-                'hujan lebat': '⛈️',
-                'heavy rain': '⛈️'
-            };
-
-            return icons[description.toLowerCase()] || '🌤️';
-        }
-
-        function isSuitableWeather(weatherDesc) {
-            const unsuitable = ['hujan', 'rain', 'storm', 'thunderstorm'];
-            return !unsuitable.some(word => weatherDesc.toLowerCase().includes(word));
-        }
-
         function displayWeatherSuggestions(weatherData, selectedDate) {
-            console.log(weatherData);
             const timeSlots = document.getElementById('timeSlots');
             const weatherSuggestions = document.getElementById('weatherSuggestions');
             const weatherResults = document.getElementById('weatherResults');
 
-            // Filter for selected date and suitable weather
-            const selectedDateStr = selectedDate;
-            const suitableSlots = weatherData.data.filter(item => {
-                const itemDate = item.local_datetime.split(' ')[0];
-                return itemDate === selectedDateStr && isSuitableWeather(item.weather_desc);
-            });
-
-            if (suitableSlots.length === 0) {
+            if (weatherData.data.length === 0) {
                 weatherResults.innerHTML = `
                     <div style="text-align: center; padding: 40px 0; color: #e74c3c;">
                         <h3>⚠️ No Suitable Weather Conditions</h3>
                         <p>Unfortunately, no optimal time slots were found for ${selectedDate}. Consider selecting a different date.</p>
                     </div>
                 `;
+                weatherResults.style.display = 'block';
                 weatherSuggestions.style.display = 'none';
                 return;
             }
@@ -222,13 +124,13 @@
 
             timeSlots.innerHTML = '';
 
-            suitableSlots.forEach((slot, index) => {
+            weatherData.data.forEach((slot, index) => {
                 const timeSlotEl = document.createElement('div');
                 timeSlotEl.className = 'time-slot';
                 timeSlotEl.dataset.index = index;
 
                 const time = slot.local_datetime.split(' ')[1].substring(0, 5);
-                const icon = getWeatherIcon(slot.weather_desc);
+                const icon = `<img src="${slot.image}" alt="${slot.weather_desc_en}" style="width: 32px; height: 32px;">`;
 
                 timeSlotEl.innerHTML = `
                     <div class="time-slot-header">
@@ -236,7 +138,7 @@
                         <div class="weather-icon">${icon}</div>
                     </div>
                     <div style="margin-bottom: 10px;">
-                        <strong>${slot.weather_desc}</strong>
+                        <strong>${slot.weather_desc_en}</strong>
                     </div>
                     <div class="time-slot-details">
                         <div class="weather-param">🌡️ ${slot.t}°C</div>
@@ -273,12 +175,16 @@
             const location = formData.get('location');
             const preferredDate = formData.get('preferredDate');
 
+            // Get selected text from select2
+            const locationSelect = $('#location').select2('data')[0];
+            const locationTitle = locationSelect ? locationSelect.text : '';
+
             currentActivityData = {
                 activityName,
                 location,
+                locationTitle,
                 preferredDate
             };
-            console.log(currentActivityData);
 
             // Show loading
             document.getElementById('loading').style.display = 'block';
@@ -287,15 +193,20 @@
             document.getElementById('successMessage').style.display = 'none';
 
             try {
-                // Simulate API call delay
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                const baseUrl = "<?= base_url('api/weather') ?>";
+                const response = await fetch(`${baseUrl}?location=${encodeURIComponent(location)}&date=${preferredDate}`);
 
-                // In real implementation, this would call the BMKG API
-                // const response = await fetch(`https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${location}`);
-                // const weatherData = await response.json();
+                if (!response.ok) {
+                    throw new Error('Weather API error');
+                }
 
-                const weatherData = getMockWeatherData();
-                displayWeatherSuggestions(weatherData, preferredDate);
+                const weatherData = await response.json();
+
+                if (weatherData.status === 'success') {
+                    displayWeatherSuggestions(weatherData, preferredDate);
+                } else {
+                    throw new Error('Weather API returned an error');
+                }
 
             } catch (error) {
                 document.getElementById('errorMessage').textContent = 'Failed to fetch weather data. Please try again.';
@@ -321,14 +232,34 @@
                     ...currentActivityData,
                     selectedTime: selectedTimeSlot.local_datetime,
                     weatherCondition: selectedTimeSlot.weather_desc,
+                    weatherConditionEn: selectedTimeSlot.weather_desc_en,
                     temperature: selectedTimeSlot.t,
-                    humidity: selectedTimeSlot.hu
+                    humidity: selectedTimeSlot.hu,
+                    windSpeed: selectedTimeSlot.ws,
+                    windDirection: selectedTimeSlot.wd,
+                    cloudCoverage: selectedTimeSlot.tcc,
+                    visibility: selectedTimeSlot.vs_text,
                 };
+
+                // Kirim ke backend (pastikan endpoint ini benar dan bisa menerima POST JSON)
+                const response = await fetch('<?= base_url('api/activities') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(activityData)
+                });
+
+                if (!response.ok) throw new Error('Network error');
+
+                const result = await response.json();
+
+                if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
 
                 document.getElementById('successMessage').innerHTML = `
                     <strong>✅ Activity Scheduled Successfully!</strong><br>
                     <strong>${currentActivityData.activityName}</strong> has been scheduled for 
-                    <strong>${selectedTimeSlot.local_datetime}</strong> with <strong>${selectedTimeSlot.weather_desc}</strong> conditions.
+                    <strong>${selectedTimeSlot.local_datetime}</strong> with <strong>${selectedTimeSlot.weather_desc_en}</strong> conditions.
                 `;
                 document.getElementById('successMessage').style.display = 'block';
 
