@@ -1,6 +1,6 @@
 <?php
 // Get API URL
-$api_url = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=31.71.01.1001";
+$api_url = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=32.75.08.1001";
 $response_body = @file_get_contents($api_url);
 
 // Check if fail
