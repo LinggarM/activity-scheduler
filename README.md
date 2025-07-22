@@ -2,6 +2,10 @@
 
 A CodeIgniter 4 web application that helps you plan outdoor activities based on weather forecasts from BMKG (Badan Meteorologi, Klimatologi, dan Geofisika) Indonesia. The application analyzes weather forecasts to suggest optimal time slots with favorable weather conditions for your outdoor activities.
 
+## 📸 Preview
+
+![App Preview](public/images/screenshot.png)
+
 ## 📋 Features
 
 ### Frontend
